@@ -10,14 +10,14 @@ import (
 )
 
 type Day struct {
-	// date string `json:"date"`
-	// amWeight  [3]float32 `json:"am_weight"`
-	// pmWeight  [3]float32 `json:"pm_weight"`
-	snack     int `json:"snack"`
-	breakfast int `json:"breakfast"`
-	lunch     int `json:"lunch"`
-	dinner    int `json:"dinner"`
-	exercise  int `json:"exercise"`
+	Date      string     `json:"date"`
+	AMWeight  [3]float32 `json:"amWeight"`
+	PMWeight  [3]float32 `json:"pmWeight"`
+	Snack     int        `json:"snack"`
+	Breakfast int        `json:"breakfast"`
+	Lunch     int        `json:"lunch"`
+	Dinner    int        `json:"dinner"`
+	Exercise  int        `json:"exercise"`
 }
 
 var Days []Day
@@ -41,24 +41,24 @@ func returnAllDays(w http.ResponseWriter, r *http.Request) {
 func main() {
 	Days = []Day{
 		Day{
-			// "2019-09-30",
-			// [3]float32{180, 180.2, 178.6},
-			// [3]float32{179.8, 179.4, 180.0},
-			500,
-			400,
-			500,
-			600,
-			100,
+			Date:      "2019-09-30",
+			AMWeight:  [3]float32{180, 180.2, 178.6},
+			PMWeight:  [3]float32{179.8, 179.4, 180.0},
+			Snack:     500,
+			Breakfast: 400,
+			Lunch:     500,
+			Dinner:    600,
+			Exercise:  100,
 		},
 		Day{
-			// "2019-10-01",
-			// [3]float32{180, 180.2, 178.6},
-			// [3]float32{179.8, 179.4, 180.0},
-			600,
-			300,
-			400,
-			500,
-			300,
+			Date:      "2019-10-01",
+			AMWeight:  [3]float32{179.8, 179.2, 179.6},
+			PMWeight:  [3]float32{179.2, 179.8, 180.2},
+			Snack:     400,
+			Breakfast: 500,
+			Lunch:     700,
+			Dinner:    500,
+			Exercise:  200,
 		},
 	}
 	fmt.Println("Starting")
