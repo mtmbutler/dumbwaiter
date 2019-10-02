@@ -38,6 +38,7 @@ func handleRequests() {
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/days", returnAllDays)
 	myRouter.HandleFunc("/day", createNewDay).Methods("POST")
+	myRouter.HandleFunc("/day/{id}", updateDay).Methods("PUT")
 	myRouter.HandleFunc("/day/{id}", deleteDay).Methods("DELETE")
 	myRouter.HandleFunc("/day/{id}", returnSingleDay)
 
@@ -87,6 +88,26 @@ func deleteDay(w http.ResponseWriter, r *http.Request) {
 			Days = append(Days[:ix], Days[ix+1:]...)
 		}
 	}
+}
+
+func updateDay(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["id"]
+	fmt.Printf("Endpoint Hit: updateDay <%s>\n", key)
+
+	// Delete the exising object
+	for ix, day := range Days {
+		if day.Id == key {
+			Days = append(Days[:ix], Days[ix+1:]...)
+		}
+	}
+
+	// Create a new object with the same ID
+	var day Day
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(reqBody, &day)
+	Days = append(Days, day)
+	json.NewEncoder(w).Encode(day)
 }
 
 func main() {
