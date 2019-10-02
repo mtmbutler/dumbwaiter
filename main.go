@@ -11,6 +11,7 @@ import (
 )
 
 type Day struct {
+	Id        string     `json:"id"`
 	Date      string     `json:"date"`
 	AMWeight  [3]float32 `json:"amWeight"`
 	PMWeight  [3]float32 `json:"pmWeight"`
@@ -35,6 +36,7 @@ func handleRequests() {
 	// Add handles
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/days", returnAllDays)
+	myRouter.HandleFunc("/days/{id}", returnSingleDay)
 
 	// Run
 	log.Fatal(http.ListenAndServe(":10000", myRouter))
@@ -45,9 +47,23 @@ func returnAllDays(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(Days)
 }
 
+func returnSingleDay(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["id"]
+	fmt.Printf("Endpoint Hit: returnSingleDay <%s>\n", key)
+
+	// Find the corresponding day
+	for _, day := range Days {
+		if day.Id == key {
+			json.NewEncoder(w).Encode(day)
+		}
+	}
+}
+
 func main() {
 	Days = []Day{
 		Day{
+			Id:        "1",
 			Date:      "2019-09-30",
 			AMWeight:  [3]float32{180, 180.2, 178.6},
 			PMWeight:  [3]float32{179.8, 179.4, 180.0},
@@ -58,6 +74,7 @@ func main() {
 			Exercise:  100,
 		},
 		Day{
+			Id:        "2",
 			Date:      "2019-10-01",
 			AMWeight:  [3]float32{179.8, 179.2, 179.6},
 			PMWeight:  [3]float32{179.2, 179.8, 180.2},
