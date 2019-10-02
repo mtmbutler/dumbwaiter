@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -36,7 +37,8 @@ func handleRequests() {
 	// Add handles
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/days", returnAllDays)
-	myRouter.HandleFunc("/days/{id}", returnSingleDay)
+	myRouter.HandleFunc("/day", createNewDay).Methods("POST")
+	myRouter.HandleFunc("/day/{id}", returnSingleDay)
 
 	// Run
 	log.Fatal(http.ListenAndServe(":10000", myRouter))
@@ -48,9 +50,9 @@ func returnAllDays(w http.ResponseWriter, r *http.Request) {
 }
 
 func returnSingleDay(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("Endpoint Hit: returnSingleDay <%s>\n", key)
 	vars := mux.Vars(r)
 	key := vars["id"]
-	fmt.Printf("Endpoint Hit: returnSingleDay <%s>\n", key)
 
 	// Find the corresponding day
 	for _, day := range Days {
@@ -58,6 +60,19 @@ func returnSingleDay(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(day)
 		}
 	}
+}
+
+func createNewDay(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: createNewDay")
+
+	// Read the request, create an object and add it to the database
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	var day Day
+	json.Unmarshal(reqBody, &day)
+	Days = append(Days, day)
+
+	// Respond with the new object
+	json.NewEncoder(w).Encode(day)
 }
 
 func main() {
