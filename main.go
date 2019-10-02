@@ -50,9 +50,9 @@ func returnAllDays(w http.ResponseWriter, r *http.Request) {
 }
 
 func returnSingleDay(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Endpoint Hit: returnSingleDay <%s>\n", key)
 	vars := mux.Vars(r)
 	key := vars["id"]
+	fmt.Printf("Endpoint Hit: returnSingleDay <%s>\n", key)
 
 	// Find the corresponding day
 	for _, day := range Days {
