@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 )
@@ -28,9 +29,15 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRequests() {
-	http.HandleFunc("/", homePage)
-	http.HandleFunc("/days", returnAllDays)
-	log.Fatal(http.ListenAndServe(":10000", nil))
+	// Instantiate a mux router
+	myRouter := mux.NewRouter().StrictSlash(true)
+
+	// Add handles
+	myRouter.HandleFunc("/", homePage)
+	myRouter.HandleFunc("/days", returnAllDays)
+
+	// Run
+	log.Fatal(http.ListenAndServe(":10000", myRouter))
 }
 
 func returnAllDays(w http.ResponseWriter, r *http.Request) {
