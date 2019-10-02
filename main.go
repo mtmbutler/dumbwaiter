@@ -38,6 +38,7 @@ func handleRequests() {
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/days", returnAllDays)
 	myRouter.HandleFunc("/day", createNewDay).Methods("POST")
+	myRouter.HandleFunc("/day/{id}", deleteDay).Methods("DELETE")
 	myRouter.HandleFunc("/day/{id}", returnSingleDay)
 
 	// Run
@@ -73,6 +74,19 @@ func createNewDay(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with the new object
 	json.NewEncoder(w).Encode(day)
+}
+
+func deleteDay(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["id"]
+	fmt.Printf("Endpoint Hit: deleteDay <%s>\n", key)
+
+	// Find the corresponding day
+	for ix, day := range Days {
+		if day.Id == key {
+			Days = append(Days[:ix], Days[ix+1:]...)
+		}
+	}
 }
 
 func main() {
