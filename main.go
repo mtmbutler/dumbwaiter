@@ -36,11 +36,11 @@ func handleRequests() {
 
 	// Add handles
 	myRouter.HandleFunc("/", homePage)
-	myRouter.HandleFunc("/days", returnAllDays)
-	myRouter.HandleFunc("/day", createNewDay).Methods("POST")
-	myRouter.HandleFunc("/day/{id}", updateDay).Methods("PUT")
-	myRouter.HandleFunc("/day/{id}", deleteDay).Methods("DELETE")
-	myRouter.HandleFunc("/day/{id}", returnSingleDay)
+	myRouter.HandleFunc("/days", returnAllDays).Methods("GET")
+	myRouter.HandleFunc("/days", createNewDay).Methods("POST")
+	myRouter.HandleFunc("/days/{id}", updateDay).Methods("PUT")
+	myRouter.HandleFunc("/days/{id}", deleteDay).Methods("DELETE")
+	myRouter.HandleFunc("/days/{id}", returnSingleDay).Methods("GET")
 
 	// Run
 	log.Fatal(http.ListenAndServe(":10000", myRouter))
