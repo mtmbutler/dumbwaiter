@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type Day struct {
@@ -38,7 +39,9 @@ func handleRequests() {
 	var err error
 	DB, err = gorm.Open("sqlite3", ":memory:")
 	if err != nil {
-		panic("Database connection failed")
+		panic("Connection failed")
+	} else {
+		fmt.Println("Connection successful")
 	}
 	defer DB.Close()
 	DB.AutoMigrate(&Day{})
@@ -55,7 +58,15 @@ func handleRequests() {
 	myRouter.HandleFunc("/days/{id}", returnSingleDay).Methods("GET")
 
 	// Run
+	fmt.Println("Listening")
 	log.Fatal(http.ListenAndServe(":10000", myRouter))
+}
+
+// getKey parses a uint primary key from a request body
+func getKey(vars map[string]string) uint {
+	key := vars["id"]
+	id, _ := strconv.Atoi(key)
+	return uint(id)
 }
 
 func returnAllDays(w http.ResponseWriter, r *http.Request) {
@@ -67,13 +78,15 @@ func returnAllDays(w http.ResponseWriter, r *http.Request) {
 
 func returnSingleDay(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	key := vars["id"]
-	fmt.Printf("Endpoint Hit: returnSingleDay <%s>\n", key)
+	key := getKey(vars)
+	fmt.Printf("Endpoint Hit: returnSingleDay <%d>\n", key)
 
 	// Find the corresponding day
 	var day Day
 	DB.First(&day, key)
-	json.NewEncoder(w).Encode(day)
+	if day.ID == key {
+		json.NewEncoder(w).Encode(day)
+	}
 }
 
 func createNewDay(w http.ResponseWriter, r *http.Request) {
@@ -91,31 +104,35 @@ func createNewDay(w http.ResponseWriter, r *http.Request) {
 
 func deleteDay(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	key := vars["id"]
-	fmt.Printf("Endpoint Hit: deleteDay <%s>\n", key)
+	key := getKey(vars)
+	fmt.Printf("Endpoint Hit: deleteDay <%d>\n", key)
 
 	// Find the corresponding day
 	var day Day
 	DB.First(&day, key)
-	DB.Delete(&day)
+	if day.ID == key {
+		DB.Delete(&day)
+	}
 }
 
 func updateDay(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	key := vars["id"]
-	fmt.Printf("Endpoint Hit: updateDay <%s>\n", key)
+	key := getKey(vars)
+	fmt.Printf("Endpoint Hit: updateDay <%d>\n", key)
 
 	// Find the object
 	var day Day
 	DB.First(&day, key)
 
-	// Read the request and update the object
-	reqBody, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(reqBody, &day)
-	DB.Save(&day)
+	if day.ID == key {
+		// Read the request and update the object
+		reqBody, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(reqBody, &day)
+		DB.Save(&day)
 
-	// Respond with the updated object
-	json.NewEncoder(w).Encode(day)
+		// Respond with the updated object
+		json.NewEncoder(w).Encode(day)
+	}
 }
 
 func main() {
