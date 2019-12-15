@@ -14,3 +14,7 @@ main
 
 # Environment
 env.sh
+
+# Python things
+*ipynb*
+*/__pycache__
