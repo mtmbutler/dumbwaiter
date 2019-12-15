@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -34,10 +35,21 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRequests() {
+	// Parse environment variables for DB auth
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	user := os.Getenv("DB_USER")
+	name := os.Getenv("DB_NAME")
+	pass := os.Getenv("DB_PASS")
+	dbUrl := fmt.Sprintf(
+		"host=%s port=%s user=%s dbname=%s password=%s",
+		host, port, user, name, pass,
+	)
+
 	// Open a database connection
-	fmt.Println("Opening database connection")
+	fmt.Printf("Opening database connection: %s\n", dbUrl)
 	var err error
-	DB, err = gorm.Open("sqlite3", ":memory:")
+	DB, err = gorm.Open("postgres", dbUrl)
 	if err != nil {
 		panic("Connection failed")
 	} else {
