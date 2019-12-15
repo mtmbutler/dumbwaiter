@@ -42,15 +42,16 @@ func handleRequests() {
 	name := os.Getenv("DB_NAME")
 	pass := os.Getenv("DB_PASS")
 	dbUrl := fmt.Sprintf(
-		"host=%s port=%s user=%s dbname=%s password=%s",
+		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		host, port, user, name, pass,
 	)
 
 	// Open a database connection
-	fmt.Printf("Opening database connection: %s\n", dbUrl)
+	fmt.Printf("Opening database connection to %s\n", name)
 	var err error
 	DB, err = gorm.Open("postgres", dbUrl)
 	if err != nil {
+		fmt.Println(err)
 		panic("Connection failed")
 	} else {
 		fmt.Println("Connection successful")
