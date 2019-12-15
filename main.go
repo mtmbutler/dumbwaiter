@@ -17,8 +17,8 @@ import (
 
 type User struct {
 	gorm.Model
-	email  string
-	apiKey string `gorm:"unique;not null"`
+	Email  string `json:"email"`
+	ApiKey string `json:"apiKey";gorm:"unique;not null"`
 }
 
 type Day struct {
@@ -65,6 +65,7 @@ func handleRequests() {
 		fmt.Println("Connection successful")
 	}
 	defer DB.Close()
+	DB.AutoMigrate(&User{})
 	DB.AutoMigrate(&Day{})
 
 	// Instantiate a mux router
@@ -90,6 +91,8 @@ func handleRequests() {
 
 // getKey parses a uint primary key from a request body
 func getKey(r *http.Request) uint {
+	vars := mux.Vars(r)
+	fmt.Println(vars)
 	key := vars["id"]
 	id, _ := strconv.Atoi(key)
 	return uint(id)
@@ -98,10 +101,11 @@ func getKey(r *http.Request) uint {
 // getUserID hits the DB for the correct user ID based on the apiKey in the request
 // body. If there isn't a match, returns 0.
 func getUserID(r *http.Request) uint {
-	vars := mux.Vars(r)
+	apiKey := r.URL.Query().Get("apiKey")
+	fmt.Println(apiKey)
 	var user User
-	DB.Where("apiKey = ?", vars["apiKey"]).First(&user)
-	if user.apiKey == apiKey {
+	DB.Where("api_key = ?", apiKey).First(&user)
+	if user.ApiKey == apiKey {
 		return user.ID
 	} else {
 		return 0
@@ -176,20 +180,20 @@ func returnAllDays(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r)
 	if userID != 0 {
 		days := make([]*Day, 0)
-		DB.Where("UserID = ?", userID).Find(&days)
+		DB.Where("user_id = ?", userID).Find(&days)
 		json.NewEncoder(w).Encode(days)
 	}
 }
 
 func returnSingleDay(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Endpoint Hit: returnSingleDay <%d>\n", key)
 	userID := getUserID(r)
 	key := getKey(r)
+	fmt.Printf("Endpoint Hit: returnSingleDay <%d>\n", key)
 
 	// Find the corresponding day
 	if userID != 0 {
 		var day Day
-		DB.Where("UserID = ?", userID).First(&day, key)
+		DB.Where("user_id = ?", userID).First(&day, key)
 		if day.ID == key {
 			json.NewEncoder(w).Encode(day)
 		}
@@ -197,15 +201,15 @@ func returnSingleDay(w http.ResponseWriter, r *http.Request) {
 }
 
 func createNewDay(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Endpoint Hit: createNewDay")
 	userID := getUserID(r)
+	fmt.Println("Endpoint Hit: createNewDay")
 
 	if userID != 0 {
 		// Read the request, create an object and add it to the database
 		reqBody, _ := ioutil.ReadAll(r.Body)
 		var day Day
 		json.Unmarshal(reqBody, &day)
-		day.UserID = userID
+		day.UserID = int(userID)
 		DB.Create(&day)
 
 		// Respond with the new object
@@ -214,14 +218,14 @@ func createNewDay(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteDay(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Endpoint Hit: deleteDay <%d>\n", key)
 	userID := getUserID(r)
 	key := getKey(r)
+	fmt.Printf("Endpoint Hit: deleteDay <%d>\n", key)
 
 	if userID != 0 {
 		// Find the corresponding day
 		var day Day
-		DB.Where("UserID = ?", userID).First(&day, key)
+		DB.Where("user_id = ?", userID).First(&day, key)
 		if day.ID == key {
 			DB.Delete(&day)
 		}
@@ -229,20 +233,20 @@ func deleteDay(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateDay(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Endpoint Hit: updateDay <%d>\n", key)
 	userID := getUserID(r)
 	key := getKey(r)
+	fmt.Printf("Endpoint Hit: updateDay <%d>\n", key)
 
 	if userID != 0 {
 		// Find the object
 		var day Day
-		DB.Where("UserID = ?", userID).First(&day, key)
+		DB.Where("user_id = ?", userID).First(&day, key)
 
 		if day.ID == key {
 			// Read the request and update the object
 			reqBody, _ := ioutil.ReadAll(r.Body)
 			json.Unmarshal(reqBody, &day)
-			day.UserID = userID
+			day.UserID = int(userID)
 			DB.Save(&day)
 
 			// Respond with the updated object
