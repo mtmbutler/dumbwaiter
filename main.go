@@ -69,6 +69,9 @@ func handleRequests() {
 	DB.AutoMigrate(&User{})
 	DB.AutoMigrate(&Day{})
 
+	// Make sure there's an admin user
+	createAdmin()
+
 	// Instantiate a mux router
 	myRouter := mux.NewRouter().StrictSlash(true)
 
@@ -105,8 +108,9 @@ func getKey(r *http.Request) uint {
 func createAdmin() {
 	fmt.Println("Checking admin")
 	var admin User
-	DB.FirstOrInit(&admin, User{email: "admin@dumbwaiter"})
-	admin.apiKey = os.Getenv("ADMIN_KEY")
+	DB.FirstOrInit(&admin, User{Email: "admin@dumbwaiter"})
+	admin.ApiKey = os.Getenv("ADMIN_KEY")
+	admin.IsAdmin = true
 	DB.Save(&admin)
 }
 
@@ -125,72 +129,114 @@ func getUser(r *http.Request) *User {
 }
 
 func returnAllUsers(w http.ResponseWriter, r *http.Request) {
+	user := getUser(r)
 	fmt.Println("Endpoint Hit: returnAllUsers")
+
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 	users := make([]*User, 0)
-	DB.Find(&users)
+	if user.IsAdmin {
+		DB.Find(&users)
+	} else {
+		DB.Where("ID = ?", user.ID).Find(&users)
+	}
 	json.NewEncoder(w).Encode(users)
 }
 
 func returnSingleUser(w http.ResponseWriter, r *http.Request) {
+	user := getUser(r)
 	key := getKey(r)
 	fmt.Printf("Endpoint Hit: returnSingleUser <%d>\n", key)
 
+	if user == nil || (!user.IsAdmin && user.ID != key) {
+		w.WriteHeader(http.StatusUnauthorized)
+		// No response if there's no authentication or a non-admin user is requesting
+		// a user other than themselves
+		return
+	}
+
 	// Find the corresponding user
-	var user User
-	DB.First(&user, key)
-	if user.ID == key {
-		json.NewEncoder(w).Encode(user)
+	var targetUser User
+	DB.First(&targetUser, key)
+	if targetUser.ID == key {
+		json.NewEncoder(w).Encode(targetUser)
 	}
 }
 
 func createNewUser(w http.ResponseWriter, r *http.Request) {
+	user := getUser(r)
 	fmt.Println("Endpoint Hit: createNewUser")
+
+	if user == nil || !user.IsAdmin {
+		w.WriteHeader(http.StatusUnauthorized)
+		// Only admins can create new users
+		return
+	}
 
 	// Read the request, create an object and add it to the database
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	var user User
-	json.Unmarshal(reqBody, &user)
-	DB.Create(&user)
+	var targetUser User
+	json.Unmarshal(reqBody, &targetUser)
+	DB.Create(&targetUser)
 
 	// Respond with the new object
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(targetUser)
 }
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {
+	user := getUser(r)
 	key := getKey(r)
 	fmt.Printf("Endpoint Hit: deleteUser <%d>\n", key)
 
+	if user == nil || !user.IsAdmin {
+		w.WriteHeader(http.StatusUnauthorized)
+		// Only admins can delete users
+		return
+	}
+
 	// Find the corresponding user
-	var user User
-	DB.First(&user, key)
-	if user.ID == key {
-		DB.Delete(&user)
+	var targetUser User
+	DB.First(&targetUser, key)
+	if targetUser.ID == key {
+		DB.Delete(&targetUser)
 	}
 }
 
 func updateUser(w http.ResponseWriter, r *http.Request) {
+	user := getUser(r)
 	key := getKey(r)
 	fmt.Printf("Endpoint Hit: updateUser <%d>\n", key)
 
-	// Find the object
-	var user User
-	DB.First(&user, key)
+	if user == nil || (!user.IsAdmin && user.ID != key) {
+		w.WriteHeader(http.StatusUnauthorized)
+		// No response if there's no authentication or a non-admin user is requesting
+		// a user other than themselves
+		return
+	}
 
-	if user.ID == key {
+	// Find the object
+	var targetUser User
+	DB.First(&targetUser, key)
+
+	if targetUser.ID == key {
 		// Read the request and update the object
 		reqBody, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(reqBody, &user)
-		DB.Save(&user)
+		json.Unmarshal(reqBody, &targetUser)
+		DB.Save(&targetUser)
 
 		// Respond with the updated object
-		json.NewEncoder(w).Encode(user)
+		json.NewEncoder(w).Encode(targetUser)
 	}
 }
 
 func returnAllDays(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: returnAllDays")
 	user := getUser(r)
-	if user != nil {
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+	} else {
 		days := make([]*Day, 0)
 		DB.Where("user_id = ?", user.ID).Find(&days)
 		json.NewEncoder(w).Encode(days)
@@ -203,7 +249,9 @@ func returnSingleDay(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Endpoint Hit: returnSingleDay <%d>\n", key)
 
 	// Find the corresponding day
-	if user != nil {
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+	} else {
 		var day Day
 		DB.Where("user_id = ?", user.ID).First(&day, key)
 		if day.ID == key {
@@ -216,7 +264,9 @@ func createNewDay(w http.ResponseWriter, r *http.Request) {
 	user := getUser(r)
 	fmt.Println("Endpoint Hit: createNewDay")
 
-	if user != nil {
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+	} else {
 		// Read the request, create an object and add it to the database
 		reqBody, _ := ioutil.ReadAll(r.Body)
 		var day Day
@@ -234,7 +284,9 @@ func deleteDay(w http.ResponseWriter, r *http.Request) {
 	key := getKey(r)
 	fmt.Printf("Endpoint Hit: deleteDay <%d>\n", key)
 
-	if user != nil {
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+	} else {
 		// Find the corresponding day
 		var day Day
 		DB.Where("user_id = ?", user.ID).First(&day, key)
@@ -249,7 +301,9 @@ func updateDay(w http.ResponseWriter, r *http.Request) {
 	key := getKey(r)
 	fmt.Printf("Endpoint Hit: updateDay <%d>\n", key)
 
-	if user != nil {
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+	} else {
 		// Find the object
 		var day Day
 		DB.Where("user_id = ?", user.ID).First(&day, key)
