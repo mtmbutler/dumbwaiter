@@ -1,6 +1,7 @@
 language: go
 go:
-    - release
+    - 1.12
+    - tip
 services:
     - postgresql
 env:
