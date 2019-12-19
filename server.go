@@ -43,7 +43,7 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: homePage")
 }
 
-func handleRequests() {
+func getDbUrl() string {
 	// Parse environment variables for DB auth
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
@@ -54,9 +54,12 @@ func handleRequests() {
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		host, port, user, name, pass,
 	)
+	return dbUrl
+}
 
-	// Open a database connection
-	fmt.Printf("Opening database connection to %s\n", name)
+func connectDB() {
+	dbUrl := getDbUrl()
+	fmt.Println("Opening database connection")
 	var err error
 	DB, err = gorm.Open("postgres", dbUrl)
 	if err != nil {
@@ -65,12 +68,17 @@ func handleRequests() {
 	} else {
 		fmt.Println("Connection successful")
 	}
-	defer DB.Close()
 	DB.AutoMigrate(&User{})
 	DB.AutoMigrate(&Day{})
 
 	// Make sure there's an admin user
 	createAdmin()
+}
+
+func handleRequests() {
+	// Connect to the database
+	connectDB()
+	defer DB.Close()
 
 	// Instantiate a mux router
 	myRouter := mux.NewRouter().StrictSlash(true)
@@ -121,7 +129,7 @@ func getUser(r *http.Request) *User {
 	fmt.Println(apiKey)
 	var user User
 	DB.Where("api_key = ?", apiKey).First(&user)
-	if user.ApiKey == apiKey {
+	if apiKey != "" && user.ApiKey == apiKey {
 		return &user
 	} else {
 		return nil
