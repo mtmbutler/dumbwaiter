@@ -16,6 +16,6 @@ before_script:
     - psql -c 'create database dumbwaiter;' -U postgres
     - go fmt ./...
 script:
-    - go test -v ./...
+    - go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 after_success:
-    - codecov
+    - bash <(curl -s https://codecov.io/bash)

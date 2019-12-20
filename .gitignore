@@ -12,6 +12,9 @@ main
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# Coverage
+coverage.txt
+
 # Environment
 env.sh
 
