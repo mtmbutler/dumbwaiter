@@ -16,14 +16,14 @@ import (
 )
 
 type User struct {
-	gorm.Model
+	ID      uint   `json:"id"`
 	Email   string `json:"email"`
 	ApiKey  string `json:"apiKey";gorm:"unique;not null"`
 	IsAdmin bool   `json:"isAdmin"`
 }
 
 type Day struct {
-	gorm.Model
+	ID        uint `json:"id"`
 	UserID    int
 	User      User
 	Date      string  `json:"date"`

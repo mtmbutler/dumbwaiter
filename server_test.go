@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	// "os"
@@ -9,13 +10,13 @@ import (
 )
 
 type Case struct {
+	serverFunc      http.HandlerFunc
 	endpoint        string
 	reqType         string
 	body            []byte
 	params          map[string]string
 	expectedCode    int
 	expectedBodyStr string
-	serverFunc      http.HandlerFunc
 }
 
 func (c Case) run(t *testing.T) {
@@ -43,23 +44,51 @@ func (c Case) run(t *testing.T) {
 
 	// Check the response body is what we expect.
 	if rr.Body.String() != c.expectedBodyStr {
-		t.Errorf("handler returned unexpected body: got %v want %v",
+		t.Errorf("handler returned unexpected body: got `%v` want `%v`",
 			rr.Body.String(), c.expectedBodyStr)
 	}
 }
 
-func TestReturnAllUsers(t *testing.T) {
+func TestReturnAllUsersNoAuth(t *testing.T) {
 	connectDB()
 	defer DB.Close()
 
 	c := Case{
-		"/users",
-		"GET",
-		[]byte(``),
-		map[string]string{},
-		http.StatusUnauthorized,
-		``,
-		returnAllUsers,
+		serverFunc:      returnAllUsers,
+		endpoint:        "/users",
+		reqType:         "GET",
+		body:            []byte(``),
+		params:          map[string]string{},
+		expectedCode:    http.StatusUnauthorized,
+		expectedBodyStr: ``,
 	}
 	c.run(t)
+}
+
+func TestReturnAllUsersNonAdmin(t *testing.T) {
+	connectDB()
+	defer DB.Close()
+
+	// Create a non-admin user so we can verify the non-admin user can't see the admin
+	// user when they hit this endpoint. Note that we don't have to create the admin,
+	// since that's done automatically when the server starts.
+	user := User{
+		Email:   "user@gmail.com",
+		ApiKey:  "someApiKey",
+		IsAdmin: false,
+	}
+	DB.FirstOrCreate(&user, user)
+	c := Case{
+		serverFunc:      returnAllUsers,
+		endpoint:        "/users",
+		reqType:         "GET",
+		body:            []byte(``),
+		params:          map[string]string{"apiKey": user.ApiKey},
+		expectedCode:    http.StatusOK,
+		expectedBodyStr: fmt.Sprintf(`[{"id":%v,"email":"user@gmail.com","apiKey":"someApiKey","isAdmin":false}]`+"\n", user.ID),
+	}
+	c.run(t)
+	if user.ID != 0 {
+		DB.Delete(&user)
+	}
 }
