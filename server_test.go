@@ -124,3 +124,51 @@ func TestReturnAllUsersAdmin(t *testing.T) {
 		DB.Delete(&user)
 	}
 }
+
+func TestReturnSingleUserNoAuth(t *testing.T) {
+
+}
+
+func TestReturnSingleUserAuth(t *testing.T) {
+
+}
+
+func TestReturnSingleUserAdmin(t *testing.T) {
+
+}
+
+func TestCreateNewUserNoAuth(t *testing.T) {
+
+}
+
+func TestCreateNewUserAuth(t *testing.T) {
+
+}
+
+func TestCreateNewUserAdmin(t *testing.T) {
+
+}
+
+func TestDeleteUserNoAuth(t *testing.T) {
+
+}
+
+func TestDeleteUserAuth(t *testing.T) {
+
+}
+
+func TestDeleteUserAdmin(t *testing.T) {
+
+}
+
+func TestUpdateUserNoAuth(t *testing.T) {
+
+}
+
+func TestUpdateUserAuth(t *testing.T) {
+
+}
+
+func TestUpdateUserAdmin(t *testing.T) {
+
+}
