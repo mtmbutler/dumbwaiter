@@ -46,4 +46,3 @@ class Dumbwaiter:
     def one_user(self, i):
         url = self.url + f"/users/{i}"
         return requests.get(url)
-
