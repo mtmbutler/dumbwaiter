@@ -21,3 +21,4 @@ env.sh
 # Python things
 *ipynb*
 */__pycache__
+venv
