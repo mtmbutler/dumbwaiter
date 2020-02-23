@@ -1,21 +1,19 @@
-language: go
-go:
-    - 1.12
-    - tip
+language: python
+python: 3.7
+cache: pip
+install: pip install -r requirements.txt
 services:
     - postgresql
 env:
     - >-
-      ADMIN_KEY=myAdminApiKey
-      DB_HOST=127.0.0.1
-      DB_PORT=5432
-      DB_USER=postgres
-      DB_NAME=dumbwaiter
-      DB_PASS=postgres
+      DJANGO_SETTINGS_MODULE=server.settings.base
+      DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/dumbwaiter
 before_script:
+    - black --check .
+    - flake8 .
+    - mypy .
     - psql -c 'create database dumbwaiter;' -U postgres
-    - go fmt ./...
 script:
-    - go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
+    - python manage.py collectstatic
 after_success:
-    - bash <(curl -s https://codecov.io/bash)
+    - codecov
