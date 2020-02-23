@@ -42,4 +42,5 @@ typed-ast==1.4.1
 typing-extensions==3.7.4.1
 urllib3==1.25.8
 virtualenv==20.0.5
+whitenoise==5.0.1
 zipp==3.0.0
