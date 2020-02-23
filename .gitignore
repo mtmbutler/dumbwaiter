@@ -20,7 +20,7 @@ env.sh
 
 # Python things
 *ipynb*
-*/__pycache__
+**/__pycache__
 venv
 db.sqlite3
 .mypy_cache

@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "dumbwaiter",
 ]
 
 MIDDLEWARE = [
@@ -51,7 +53,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "dumbwaiter.urls"
+ROOT_URLCONF = "server.urls"
 
 TEMPLATES = [
     {
@@ -69,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "dumbwaiter.wsgi.application"
+WSGI_APPLICATION = "server.wsgi.application"
 
 
 # Database
@@ -113,3 +115,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = "/static/"
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
