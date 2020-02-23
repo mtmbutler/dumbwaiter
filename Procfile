@@ -1,2 +1,2 @@
-release: python manage.py migrate --noinput && python manage.py createsuperuser --username admin --email admin@admin.com --noinput
+release: python manage.py migrate --noinput
 web: gunicorn server.wsgi --log-file -
