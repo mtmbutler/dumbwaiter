@@ -4,7 +4,7 @@ from rest_framework import routers
 from dumbwaiter.views import DayViewSet
 
 router = routers.DefaultRouter()
-router.register("days", DayViewSet)
+router.register("days", DayViewSet, basename="Day")
 
 urlpatterns = [
     url(r"^", include(router.urls)),

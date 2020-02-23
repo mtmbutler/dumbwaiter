@@ -16,4 +16,3 @@ class Day(models.Model):
 
     class Meta:
         unique_together = ("user", "date")
-
