@@ -6,8 +6,9 @@ services:
     - postgresql
 env:
     - >-
-      DJANGO_SETTINGS_MODULE=server.settings.base
+      DJANGO_SETTINGS_MODULE=server.settings.development
       DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/dumbwaiter
+      DJANGO_SECRET_KEY=verysecretkey
 before_script:
     - black --check .
     - flake8 .
