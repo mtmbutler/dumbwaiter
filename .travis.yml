@@ -14,6 +14,6 @@ before_script:
     - mypy .
     - psql -c 'create database dumbwaiter;' -U postgres
 script:
-    - python manage.py collectstatic
+    - python manage.py collectstatic --noinput
 after_success:
     - codecov
