@@ -11,6 +11,7 @@ class DaySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = m.Day
         fields = [
+            "id",
             "user",
             "date",
             "am_weight",
