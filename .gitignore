@@ -24,3 +24,6 @@ env.sh
 venv
 db.sqlite3
 .mypy_cache
+
+# JS things
+node_modules
